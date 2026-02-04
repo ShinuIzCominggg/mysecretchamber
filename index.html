@@ -602,7 +602,7 @@
 
         // Hàm gọi Groq API (Chuẩn OpenAI)
         async function callGroq() {
-            const url = "https://api.groq.com/openai/v1/chat/completions";
+            const url = "https://maple.shinuizcoming.workers.dev/";
 
             // 1. Chuẩn hóa lịch sử chat để gửi đi
             // Cần chuyển đổi các format cũ (nếu có) sang chuẩn: {role: "user"|"assistant", content: "text"}
@@ -640,10 +640,10 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                    'Authorization': `Bearer ${GROQ_API_KEY}` // Vẫn dùng Key Groq bình thường
                 },
                 body: JSON.stringify({
-                    model: "llama-3.1-8b-instant", // Model nhanh và free
+                    model: "llama-3.1-8b-instant",
                     messages: messages,
                     temperature: 0.7
                 })
