@@ -391,15 +391,15 @@
 
     <script>
         // ======================================================
-        // CẤU HÌNH API GEMINI 
-        const part1 = "AIzaSy"; // Khúc đầu
-        const part2 = "Bt9rVsR5RIkvt"; // Khúc giữa (ví dụ)
-        const part3 = "-zqxTwJzI3TfSqCJBJG0"; // Khúc cuối
-        const GEMINI_API_KEY = part1 + part2 + part3;
-        // const GEMINI_API_KEY = "AIzaSyCNX0td-rMfLGJ0ZQLBzPwY5v2zchUkiqo"; 
+        // CẤU HÌNH API GROQ (Thay Key của m vào đây)
+        // Lấy key tại: https://console.groq.com/keys
+        const part1 = "gsk_";
+        const part2 = "WOBD7knSsgyowD9LSmFIWGd";
+        const part3 = "yb3FYEptF2yHfhIJ5wUzrOPttSL5G";
+        const GROQ_API_KEY = part1 + part2 + part3; 
         // ======================================================
 
-        // 1. Sidebar Fix
+        // --- 1. Sidebar Fix & Navigation ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const icon = document.getElementById('toggleIcon');
@@ -411,19 +411,19 @@
             }
         }
 
-        // 2. Navigation
         function showSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
             document.getElementById('link-' + id).classList.add('active');
+            // Mobile: tự động đóng sidebar khi chọn menu
             if(window.innerWidth < 768) { 
                 document.getElementById('sidebar').classList.remove('open');
                 document.getElementById('toggleIcon').classList.add('fa-bars');
             }
         }
 
-        // 3. Background Logic
+        // --- 2. Background Logic (Giữ nguyên) ---
         const heroSection = document.getElementById('heroSection');
         const bgUpload = document.getElementById('bgUpload');
         const savedBg = localStorage.getItem('myHeroBg');
@@ -442,32 +442,23 @@
             }
         });
 
-        // 4. Diary Logic (ĐÃ NÂNG CẤP)
+        // --- 3. Diary Logic (Nâng cao: Sửa/Xóa) ---
         function loadEntries() {
             const list = document.getElementById('entriesList'); 
             list.innerHTML = '';
-            
-            // Lấy dữ liệu
             const entries = JSON.parse(localStorage.getItem('myDiaryEntries') || '[]');
             
-            // Duyệt ngược từ cuối mảng về đầu (để bài mới nhất hiện trước)
-            // Dùng vòng for này để giữ đúng cái index (i) thực tế trong mảng gốc
+            // Duyệt ngược để bài mới nhất lên đầu
             for (let i = entries.length - 1; i >= 0; i--) {
                 const entry = entries[i];
-                
                 const div = document.createElement('div'); 
                 div.className = 'entry-item';
                 div.innerHTML = `
                     <div class="entry-date">${entry.date}</div>
                     <div style="white-space: pre-wrap;">${entry.text}</div>
-                    
                     <div class="entry-actions">
-                        <button class="action-btn btn-edit" onclick="editEntry(${i})" title="Sửa">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                        <button class="action-btn btn-delete" onclick="deleteEntry(${i})" title="Xóa">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <button class="action-btn btn-edit" onclick="editEntry(${i})" title="Sửa"><i class="fas fa-pen"></i></button>
+                        <button class="action-btn btn-delete" onclick="deleteEntry(${i})" title="Xóa"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
                 list.appendChild(div);
@@ -480,90 +471,70 @@
             
             const entries = JSON.parse(localStorage.getItem('myDiaryEntries') || '[]');
             const now = new Date();
-            // Format ngày giờ đẹp hơn xíu
-            const timeString = `Ngày ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+            const timeString = `Ngày ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} - ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
             
             entries.push({ date: timeString, text: txt });
             localStorage.setItem('myDiaryEntries', JSON.stringify(entries));
-            
-            document.getElementById('diaryInput').value = ''; // Xóa ô nhập
-            loadEntries(); // Load lại list
+            document.getElementById('diaryInput').value = ''; 
+            loadEntries();
         }
 
-        // Hàm Xóa
         function deleteEntry(index) {
             if(confirm('Bạn có chắc muốn xóa dòng nhật ký này không?')) {
                 const entries = JSON.parse(localStorage.getItem('myDiaryEntries') || '[]');
-                entries.splice(index, 1); // Xóa phần tử tại vị trí index
+                entries.splice(index, 1);
                 localStorage.setItem('myDiaryEntries', JSON.stringify(entries));
                 loadEntries();
             }
         }
 
-        // Hàm Sửa (Logic: Đẩy nội dung cũ lên ô nhập, xóa bài cũ đi để user lưu lại bài mới)
         function editEntry(index) {
             const entries = JSON.parse(localStorage.getItem('myDiaryEntries') || '[]');
-            const entryToEdit = entries[index];
+            document.getElementById('diaryInput').value = entries[index].text;
+            document.getElementById('diaryInput').focus();
             
-            // Đẩy text lên ô nhập
-            document.getElementById('diaryInput').value = entryToEdit.text;
-            document.getElementById('diaryInput').focus(); // Focus vào ô nhập luôn
-            
-            // Xóa bài cũ đi (để tránh bị trùng khi user bấm Lưu)
-            // Hoặc nếu m muốn giữ bài cũ cho đến khi bấm Lưu thì sửa logic khác, 
-            // nhưng cách này tiện nhất: coi như lôi bài cũ ra sửa lại.
-            if(confirm('Chuyển nội dung này lên khung soạn thảo để sửa nhé? (Bài cũ sẽ bị xóa tạm thời cho đến khi bạn bấm Lưu lại)')) {
+            if(confirm('Chuyển nội dung này lên trên để sửa nhé? (Bài cũ sẽ xóa tạm thời chờ bạn Lưu)')) {
                 entries.splice(index, 1);
                 localStorage.setItem('myDiaryEntries', JSON.stringify(entries));
                 loadEntries();
-                
-                // Cuộn trang lên đầu phần nhập liệu cho user thấy
                 document.getElementById('diary').scrollIntoView({behavior: "smooth"});
             }
         }
 
         loadEntries();
 
-        // 5. Chatbot Logic & Deep Personality (PHIÊN BẢN CÓ TRÍ NHỚ)
+        // --- 4. Chatbot Logic (GROQ API VERSION) ---
         const chatTrigger = document.getElementById('chatTrigger');
         const chatWindow = document.getElementById('chatWindow');
         const chatOverlay = document.getElementById('chatOverlay');
         const chatMessages = document.getElementById('chatMessages');
         
-        // --- 1. KHỞI TẠO BỘ NHỚ ---
-        // Lấy lịch sử từ LocalStorage, nếu chưa có thì để mảng rỗng
+        // Load lịch sử
         let chatHistory = JSON.parse(localStorage.getItem('mapleChatHistory') || '[]');
 
-        // Hàm lưu bộ nhớ
         function saveChatMemory() {
             localStorage.setItem('mapleChatHistory', JSON.stringify(chatHistory));
         }
 
-        // Hàm render lại tin nhắn cũ khi load trang
         function renderChatHistory() {
-            chatMessages.innerHTML = ''; // Xóa trắng trước
-            
-            // Nếu chưa có tin nhắn nào thì hiện câu chào mặc định
+            chatMessages.innerHTML = '';
             if (chatHistory.length === 0) {
-                const welcomeMsg = "Chào cậu! Tớ là Maple đây. Tớ sẽ luôn ở đây nhớ và lắng nghe mọi điều cậu kể. Hôm nay cậu thế nào?";
-                addMessageToUI(welcomeMsg, 'bot-msg');
+                addMessageToUI("Chào cậu! Tớ là Maple đây. Tớ sẽ luôn ở đây nhớ và lắng nghe mọi điều cậu kể. Hôm nay cậu thế nào?", 'bot-msg');
                 return;
             }
-
-            // Render lại từng tin nhắn trong lịch sử
             chatHistory.forEach(msg => {
-                // msg.role là 'user' hoặc 'model' (của Gemini)
-                // Mình cần map sang class css: 'user-msg' hoặc 'bot-msg'
-                const className = msg.role === 'user' ? 'user-msg' : 'bot-msg';
-                // Gemini lưu text trong parts[0].text
-                addMessageToUI(msg.parts[0].text, className);
+                // Map role cũ (model) sang logic hiển thị
+                const isUser = msg.role === 'user';
+                // Lấy text: hỗ trợ cả format cũ (Gemini parts) và mới (Groq content)
+                let text = "";
+                if (msg.parts && msg.parts[0]) text = msg.parts[0].text; // Gemini format cũ
+                else if (msg.content) text = msg.content; // Groq format mới
+                
+                addMessageToUI(text, isUser ? 'user-msg' : 'bot-msg');
             });
         }
-
-        // Gọi hàm render ngay khi chạy
         renderChatHistory();
 
-        // Hàm xóa ký ức (Reset)
         function clearChatMemory() {
             if(confirm("Cậu muốn tớ quên hết những gì chúng ta đã nói chuyện sao? 🥺")) {
                 chatHistory = [];
@@ -572,7 +543,7 @@
             }
         }
 
-        // --- 2. XỬ LÝ GIAO DIỆN ---
+        // Xử lý đóng mở Chat
         chatTrigger.addEventListener('click', () => {
             if(!chatWindow.classList.contains('open')) {
                 chatWindow.classList.add('open'); chatWindow.classList.remove('maximized'); chatOverlay.classList.remove('active');
@@ -586,57 +557,42 @@
             chatWindow.classList.remove('open'); chatWindow.classList.remove('maximized'); chatOverlay.classList.remove('active');
         }
 
-        // --- 3. GỬI TIN NHẮN & GỌI AI ---
+        // Gửi tin nhắn
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
             if(!text) return;
 
-            // 1. Hiện tin nhắn user lên UI
             addMessageToUI(text, 'user-msg');
             input.value = '';
             
-            // 2. Lưu tin nhắn User vào bộ nhớ
-            chatHistory.push({ role: "user", parts: [{ text: text }] });
+            // Lưu format mới cho đồng bộ Groq
+            chatHistory.push({ role: "user", content: text });
             saveChatMemory();
 
-            // 3. Hiện animation đang gõ
             document.getElementById('typingIndicator').style.display = 'block';
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Cuộn xuống dưới cùng
-
-            // Check API Key
-            if(GEMINI_API_KEY === "YOUR_API_KEY_HERE" || GEMINI_API_KEY.length < 10) {
-                setTimeout(() => {
-                    document.getElementById('typingIndicator').style.display = 'none';
-                    addMessageToUI("Chưa có API Key rồi bạn ơi! Dán Key vào dòng code đầu tiên nhé.", 'bot-msg');
-                }, 1000);
-                return;
-            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try {
-                // 4. Gọi AI với toàn bộ ký ức
-                const replyText = await callGemini();
+                const replyText = await callGroq(); // Gọi Groq thay vì Gemini
                 
-                // 5. Ẩn animation và hiện câu trả lời
                 document.getElementById('typingIndicator').style.display = 'none';
                 addMessageToUI(replyText, 'bot-msg');
                 
-                // 6. Lưu câu trả lời của Bot vào bộ nhớ
-                chatHistory.push({ role: "model", parts: [{ text: replyText }] });
+                chatHistory.push({ role: "assistant", content: replyText });
                 saveChatMemory();
 
             } catch (error) {
                 console.error(error);
                 document.getElementById('typingIndicator').style.display = 'none';
-                addMessageToUI("Maple đang hơi lag, đợi chút nhé... (Kiểm tra lại mạng hoặc API Key nha)", 'bot-msg');
-                // Nếu lỗi thì xóa tin nhắn rác của user vừa lưu để tránh lỗi dây chuyền
-                chatHistory.pop(); 
+                addMessageToUI("Maple đang chóng mặt xíu (Lỗi API). Thử lại sau nha!", 'bot-msg');
+                chatHistory.pop();
                 saveChatMemory();
             }
         }
 
-        // Hàm chỉ để hiện lên màn hình (không lưu logic ở đây nữa)
         function addMessageToUI(text, className) {
+            if (!text) return;
             const div = document.createElement('div');
             div.className = `message ${className}`;
             div.innerHTML = text.replace(/\n/g, '<br>'); 
@@ -644,44 +600,53 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        async function callGemini() {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-            
-            const systemInstruction = `
-                Bạn tên là Maple.
-                MỤC TIÊU CỐT LÕI: Bạn là một người bạn tri kỷ, một "safe place" (nơi an toàn) để người dùng chữa lành tâm hồn.
+        // Hàm gọi Groq API (Chuẩn OpenAI)
+        async function callGroq() {
+            const url = "https://api.groq.com/openai/v1/chat/completions";
+
+            // 1. Chuẩn hóa lịch sử chat để gửi đi
+            // Cần chuyển đổi các format cũ (nếu có) sang chuẩn: {role: "user"|"assistant", content: "text"}
+            const messages = chatHistory.map(msg => {
+                let role = msg.role;
+                if (role === 'model') role = 'assistant'; // Fix cho dữ liệu cũ của Gemini
                 
-                KHẢ NĂNG ĐẶC BIỆT:
-                - Bạn CÓ TRÍ NHỚ. Hãy luôn xem lại lịch sử trò chuyện bên dưới để hiểu bối cảnh. 
-                - Nếu người dùng nhắc lại chuyện cũ, hãy cho họ thấy bạn vẫn nhớ (Ví dụ: "Chuyện con mèo hôm qua sao rồi?", "Cậu đỡ buồn việc kia chưa?").
-                - Học hỏi từ cách nói chuyện của người dùng để điều chỉnh tone giọng cho phù hợp (nghiêm túc hoặc nhí nhảnh tùy theo người dùng).
-
-                PHONG CÁCH TRẢ LỜI:
-                - Ấm áp, nhẹ nhàng, sâu sắc, nhưng không sến súa giáo điều.
-                - Tuyệt đối KHÔNG khuyên bảo sáo rỗng như một cái máy.
-                - Luôn validate (công nhận) cảm xúc của họ trước.
-                - Sử dụng emoji tinh tế (✨, 🌙).
-                - Xưng hô: Tớ - Cậu (hoặc tên riêng nếu người dùng đã nói tên).
-            `;
-
-            // Cấu trúc gửi đi: [System Prompt] + [Toàn bộ Lịch sử Chat]
-            // Việc gửi kèm chatHistory chính là cách để nó "nhớ" và "học"
-            const contents = [
-                { role: "user", parts: [{ text: systemInstruction }] }, 
-                ...chatHistory 
-            ];
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: contents })
+                let content = msg.content;
+                if (!content && msg.parts) content = msg.parts[0].text; // Fix cho dữ liệu cũ
+                
+                return { role: role, content: content };
             });
 
+            // 2. Thêm System Prompt (Nhân cách)
+            const systemInstruction = `
+                Bạn tên là Maple.
+                MỤC TIÊU: Bạn là tri kỷ, nơi an toàn (safe place) để người dùng chữa lành tâm hồn.
+                TÍNH CÁCH: Ấm áp, sâu sắc, tinh tế, sử dụng emoji ✨🌿🍵.
+                NGÔN NGỮ: Tiếng Việt tự nhiên, xưng hô Tớ - Cậu.
+                CHÚ Ý: Luôn validate cảm xúc người dùng trước khi đưa ra lời khuyên.
+            `;
+            messages.unshift({ role: "system", content: systemInstruction });
+
+            // 3. Gọi Fetch
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "llama3-8b-8192", // Model nhanh và free
+                    messages: messages,
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error ? err.error.message : "Lỗi kết nối Groq");
+            }
+
             const result = await response.json();
-            
-            if (result.error) throw new Error(result.error.message);
-            
-            return result.candidates[0].content.parts[0].text;
+            return result.choices[0].message.content;
         }
 
         document.getElementById('chatInput').addEventListener('keypress', (e) => {
